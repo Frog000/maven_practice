@@ -1,0 +1,146 @@
+프로젝트 생성 - 사용자 정의 프로젝트
+라이브러리 설정 - 라이브러리 관리와 의존성 체크
+코드 작업
+컴파일
+테스트
+패키지 만들기
+배포 - 라이브러리 저장소 활용
+리포팅
+
+
+
+-- maven 설치
+https://maven.apache.org/download.cgi 
+
+Files탭에서 Binary zip archive Link 탭 설치
+-> apache-maven-x.x.x-bin.zip
+
+-- maven 환경변수 설정(M2_HOME)
+bin폴더가 있는 루트 디렉토리로.
+
+
+-- cmd에서 메이븐 버전, 설치 확인
+mvn -version
+
+mvn 버전이 조회가 안될 때
+JAVA_HOME도 bin폴더가 있는 루트 디렉터리로 변경.
+https://sup2is.tistory.com/64
+
+-- 작업할 폴더 생성 및 이동
+mkdir maven_test
+cd maven_test
+
+-- 자주 만드는 프로젝트를 기본 형태 패키지(archetype)로 설정해두고 프로젝트 형태로 어딘가에 공유, 다른 사람이 사용 가능
+mvn archetype:generate -DgroupId=com.example -DartifactId=mvnproject -DarchetypeArtifactId=maven-archetype-quickstart
+
+-- 생성한 프로젝트 폴더로 이동
+cd mvnproject
+
+-- sample java 파일(App.java) 컴파일(mvn명령어는 항상 pom.xml이 있는 경로에서 실행), jdk 1.8 이상인 것 확인.
+mvn compile
+
+-- 컴파일한 클래스 파일 패키징
+mvn package
+-> C:\Users\HOME\Desktop\maven\mvnproject\target 경로에서 패키징된 jar파일 확인
+파일명 : mvnproject-1.0-SNAPSHOT.jar
+
+-- package한 jar 파일 실행(target만 입력한 후 tab 버튼으로 경로 찾기 가능)
+java -cp target\mvnproject-1.0-SNAPSHOT.jar com.example.App
+
+
+Maven의 Build Lifecycle
+maven의 명령어들은 결국 build 단계들에서 수행되는 각각의 단계들임
+전체 단계 : Phase
+각각의 단계를 실행해주는 툴 : Plug-in
+Plug-in 내부에 실질적으로 동작을 하는 툴: Goal
+
+
+POM(Project Object Model)
+프로젝트를 구성하고 있는 내용들을 하나의 모델로 가지고 있음.
+프로젝트 관련 설정
+
+-- eclipse에서 maven 프로젝트 import
+file - import - maven - existing maven project - maven 프로젝트 루트 경로 선택, pom.xml등록된 것 확인 후 임포트하기.
+maven으로 만든 프로젝트는 eclipse 프로젝트가 아니기 때문에 다른 IDE에서도 임포트해서 사용 가능.
+
+
+-- 컴파일에 플러그인 설정
+임포트 후 프로젝트의 폴더구조를 확인하다가 JRE System Library를 보면 J2SE-1.5로 나옴.
+아까 명령어로 maven 프로젝트를 생성할 때 사용한 maven-archetype-quickstart은 기본 JDK버전이 1.5임.
+
+라이프사이클 중 따라서 compile의 플러그인을 바꿔야함.
+pom.xml 연 후, </dependencies> 아래에 
+
+
+<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+추가.(상세한 플러그인 설정 방식)
+프로젝트 우클릭 -> maven -> update project
+
+간단하게 컴파일러 버전만 바꾸는 방식
+<properties>
+	<maven.compiler.source>1.8</maven.compiler.source>
+	<maven.compiler.target>1.8</maven.compiler.target>
+</properties>
+
+
+--maven archetypes 조회
+mvn archetype:generate 까지만 입력 후 실행하면 다른 사람들이 만들어놓은 수천가지의 아키타입들이 나오는데,
+우리가 만들었던  maven-archetype-quickstart는 그 중에서 가장 기본 아키타입(아무것도 설정되어있지 않음) 프로젝트임.
+
+
+-- 자바프로젝트를 단순하게 컴파일, 패키징해서 웹 프로젝트로 변환
+pom.xml에서 <packaging>jar</packaging>를 war로 변경.(war : WebApplication Archive, 배포 확장자로 쓰임, 웹 애플리케이션이라는 의미)
+project -> maven -> update project
+
+pom.xml 에러 확인 -> web.xml이 없으니 생성하라는 메시지.
+web프로젝트로의 변경 확인, src/main/webapp/ 하위에 WEB-INF 폴더 생성
+tomcat폴더 -> C:\Users\HOME\Desktop\apache-tomcat-9.0.54\webapps\ROOT\WEB-INF 에서
+web.xml 복사 후 WEB-INF 폴더에 붙여넣기.
+
+-- 라이브러리 설정하기(servlet이면 servlet 라이브러리, spring이면 spring라이브러리  등)
+webapp/ index.jsp 생성 하면, 다음과 같은 에러가 발생.
+"The superclass "javax.servlet.http.HttpServlet" was not found on the Java Build Path"
+Servlet 라이브러리가 Java Build Path에서 찾지 못했다는 뜻.
+
+maven repository 사이트 접속. https://mvnrepository.com/search?q=jsp
+jsp 검색.
+JavaServer Pages(TM) API 선택. -> 버전이 너무 많다.. 어떤 버전을 받아야하지?
+Tomcat 사이트 접속(https://tomcat.apache.org/)
+사용 중인 톰캣 버전의 Documentation 선택(9.0) -> 좌측 하단의 Reference 에서 JSP, EL, Servlet의 버전 확인
+Servlet(4.0), JSP(2.3), EL(3.0)
+
+받을 때 매번 버전을 확인하긴 번거로움.
+tomcat jsp 검색 -> tomcat jsp api -> 현재 사용 중인 버전(9.0.54) 선택.
+Maven의 클립보드 더블클릭(복사)
+
+pom.xml의 dependency에 붙여넣고, 저장 (다운로딩 게이지바 확인)
+설치 완료 후, .m2 폴더 확인 
+tomcat의 폴더 확인 C:\Users\HOME\.m2\repository\org\apache\tomcat
+그 후 eclipse에서 Livraries/Maven Dependencies/ tomcat jar들 확인.
+
+
+-- 라이브러리는 분명히 다운 되었는데, 클래스 에러는 발생하거나 라이브러리가 다운 중에 링크가 깨질 때.
+eclipse종료 후, .m2/repository 내의 전체 폴더들을 제거
+eclipse 재실행 후 repository 폴더 보면 다시 다운로드 중인 것이 확인 가능해짐.
+
+-- eclipse 자체 maven 라이브러리 다운로드 UI에서 검색이 안될 때
+Window - Show View -> Other -> Maven -> Maven Repositories
+
+Maven Repositories(저장소에 들어있는 목록들을 인덱스화 한 것)
+Global Repositories를 누르면 central 폴더가 보일텐데 그 폴더가 글로벌에서 다운받을 수 있는 목록들.
+근데 그 central 폴더의 하위 목록들(다운받을 수 있는 라이브러리 목록들)이 안보이는 경우에는 인덱스 빌드를 안했기 때문.
+그러면 central 폴더 우클릭, Rebuild Index하면 프로세스가 진행되는데 1~3시간 걸릴 수 있음.
+
+
+
